@@ -29,11 +29,16 @@
 <ul>
     {% for expense in expenses %}
     <li>
-        Payer: {{ expense.payer }}, Participants: {{ expense.participants }}, Amount: {{ expense.amount }}
+        Payer: {{ expense.payer }}, Participants:
+        {% for participant in expense.participants %}
+        "{{ participant }}"{% if not loop.last %}, {% endif %}
+        {% endfor %}
+        ({{ expense.participants|length }} participants), Amount: {{ expense.amount }}
         <button onclick="deleteExpense({{ expense.id }})">Delete Expense</button>
     </li>
     {% endfor %}
 </ul>
+
 
 <form id="addUserForm">
     <label for="username">Username:</label>
@@ -41,31 +46,16 @@
     <button onclick="addUser()" type="button">Add User</button>
 </form>
 
-
-<!--<form id="addExpenseForm">-->
-<!--    <label for="payer">Payer:</label>-->
-<!--    <input id="payer" name="payer" type="text">-->
-<!--    <div id="participantsContainer">-->
-<!--        <label for="participant1">Participant 1:</label>-->
-<!--        <input class="participant" name="participants[]" type="text">-->
-<!--    </div>-->
-<!--    <button onclick="addParticipant()" type="button">Add Participant</button>-->
-<!--    <label for="amount">Amount:</label>-->
-<!--    <input id="amount" name="amount" type="number">-->
-<!--    <button onclick="addExpense()" type="button">Add Expense</button>-->
-<!--    <span id="addExpenseError"></span> &lt;!&ndash; Error message placeholder &ndash;&gt;-->
-<!--</form>-->
-
-
-<!--<h2>Current Balances</h2>-->
-<!--<ul id="balanceList">-->
-<!--    {% for user in users.values() %}-->
-<!--    <li id="balance{{ user.name }}">{{ user.name }}: {{ user.balance }}</li>-->
-<!--    {% endfor %}-->
-<!--</ul>-->
-
-<!--<button onclick="refreshBalances()">Refresh Balances</button>-->
-
+<h2>Add Expense</h2>
+<form id="addExpenseForm">
+    <label for="expensePayer">Payer:</label>
+    <input id="expensePayer" name="payer" type="text"><br>
+    <label for="expenseParticipants">Participants (comma-separated):</label>
+    <input id="expenseParticipants" name="participants" type="text"><br>
+    <label for="expenseAmount">Amount:</label>
+    <input id="expenseAmount" name="amount" type="number"><br>
+    <button onclick="addExpense()" type="button">Add Expense</button>
+</form>
 
 <script>
 
@@ -101,34 +91,46 @@
         }
     }
 
-    // async function deleteExpense(id) {
-    //     const response = await fetch(`/delete_expense/${id}`, {
-    //         method: "POST"
-    //     });
-    //     if (response.ok) {
-    //         // If expense deleted successfully, reload the page
-    //         window.location.reload();
-    //     } else {
-    //         // Handle error if needed
-    //         console.error("Error deleting expense");
-    //     }
-    // }
+    async function addExpense() {
+        const payer = document.getElementById("expensePayer").value;
+        const participantsInput = document.getElementById("expenseParticipants").value;
+        const participants = participantsInput.split(",").map(item => item.trim());
+        console.log("Parsed Participants:", participants); // Log statement
 
-    // async function refreshBalances() {
-    //     window.location.reload();
-    // }
+        const formData = new FormData();
+        formData.append("payer", payer);
+        participants.forEach(participant => formData.append("participants", participant)); // Append each participant separately
+        formData.append("amount", parseFloat(document.getElementById("expenseAmount").value));
 
-    // async function settleUp(user) {
-    //     const response = await fetch(`/settle_up/${user}`, {method: 'POST'});
-    //     const data = await response.json();
-    //     if (response.ok) {
-    //         // Update the balance for the settled user
-    //         document.getElementById(`balance${user}`).innerText = `${user}: 0`;
-    //         alert(data.message);
-    //     } else {
-    //         alert(data.error);
-    //     }
-    // }
+        const response = await fetch("/add_expense", {
+            method: "POST",
+            body: formData
+        });
+
+        if (response.ok) {
+            // If expense added successfully, reload the page
+            window.location.reload();
+        } else {
+            // Handle error if needed
+            console.error("Error adding expense");
+        }
+    }
+
+
+    async function deleteExpense(expenseId) {
+        const response = await fetch(`/delete_expense/${expenseId}`, {
+            method: "POST"
+        });
+
+        if (response.ok) {
+            // If expense deleted successfully, reload the page
+            window.location.reload();
+        } else {
+            // Handle error if needed
+            console.error("Error deleting expense");
+        }
+    }
+
 </script>
 
 </body>
