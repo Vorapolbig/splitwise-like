@@ -20,12 +20,21 @@
     <li>
         <span id="userName">{{ user.name }}</span> - Balance: <span id="userBalance">{{ user.balance }}</span>
         <button onclick="deleteUser('{{ user.name }}')">Delete User</button>
-        <button onclick="settleUp('{{ user.name }}')">Settle Up</button>
+<!--        <button onclick="settleUp('{{ user.name }}')">Settle Up</button>-->
     </li>
     {% endfor %}
 </ul>
 
+<h3>Add User</h3>
+<form id="addUserForm">
+    <label for="username">Username:</label>
+    <input id="username" name="name" type="text">
+    <button onclick="addUser()" type="button">Add User</button>
+</form>
+
+
 <h2>Expenses</h2>
+<h3>Current Expenses</h3>
 <ul>
     {% for expense in expenses %}
     <li>
@@ -39,14 +48,7 @@
     {% endfor %}
 </ul>
 
-
-<form id="addUserForm">
-    <label for="username">Username:</label>
-    <input id="username" name="name" type="text">
-    <button onclick="addUser()" type="button">Add User</button>
-</form>
-
-<h2>Add Expense</h2>
+<h3>Add Expense</h3>
 <form id="addExpenseForm">
     <label for="expensePayer">Payer:</label>
     <input id="expensePayer" name="payer" type="text"><br>
