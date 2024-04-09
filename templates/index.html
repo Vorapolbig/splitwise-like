@@ -18,12 +18,19 @@
 <ul id="userList">
     {% for user in users.values() %}
     <li>
-        <span id="userName">{{ user.name }}</span> - Balance: <span id="userBalance">{{ user.balance }}</span>
+        <span id="userName">{{ user.name }}</span> -
+        Paid: <span id="userPaid">{{ user.paid }}</span>
+        Owed: <span id="userOwed">{{ user.owed }}</span>
         <button onclick="deleteUser('{{ user.name }}')">Delete User</button>
-<!--        <button onclick="settleUp('{{ user.name }}')">Settle Up</button>-->
     </li>
     {% endfor %}
 </ul>
+
+<form id="updateBalance">
+<!--    <label for="username">Username:</label>-->
+<!--    <input id="username" name="name" type="text">-->
+    <button onclick="updateBalance()" type="button">Updata Balance</button>
+</form>
 
 <h3>Add User</h3>
 <form id="addUserForm">
@@ -94,6 +101,19 @@
             // Handle error if needed
             console.error("Error deleting user");
         }
+    }
+
+    async function updateBalance() {
+        const response = await fetch(`/update_balance`, {method: "GET"});
+                if (response.ok) {
+            // If user deleted successfully, reload the page
+            window.location.reload();
+            console.log("Balance updated:", name)
+        } else {
+            // Handle error if needed
+            console.error("Error can not update balance");
+        }
+
     }
 
     async function addExpense() {

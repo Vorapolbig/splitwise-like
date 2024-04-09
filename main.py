@@ -17,7 +17,6 @@ users = {}
 expenses = []
 expense_id_counter = 0
 
-
 # Define routes
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
@@ -27,7 +26,7 @@ async def home(request: Request):
 @app.post("/add_user")
 async def add_user(name: str = Form(...)):
     if name not in users:
-        users[name] = {"name": name, "balance": 0}
+        users[name] = {"name": name, "paid": 0, "owed": 0}
     return {"message": "User added successfully"}
 
 
@@ -85,6 +84,21 @@ async def delete_expense(expense_id: int):
     expenses = [expense for expense in expenses if expense.id != expense_id]
     return {"message": "Expense deleted successfully"}
 
+
+@app.get("/update_balance")
+async def update_balance(request: Request):
+    print(users.items)
+    global expenses
+    # reset balance
+    for name in users.keys():
+        users[name]["paid"] = 0
+        users[name]["owed"] = 0
+
+    for expense in expenses:
+        users[expense.payer]["paid"] += expense.amount
+        for participant in expense.participants:
+            users[participant]["owed"] += expense.amount / len(expense.participants)
+    return {"message": "Balance updated successfully"}
 
 
 
