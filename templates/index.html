@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Splitwise App</title>
+    <link href="{{ url_for('static', path='/css/style.css') }}" rel="stylesheet" type="text/css">
+    <style>
+        body {
+            padding: 20px; /* Add padding to the body */
+        }
+    </style>
+</head>
+<body>
+<h1>Welcome to Splitwise App</h1>
+
+<h2>Users</h2>
+<ul id="userList">
+    {% for user in users.values() %}
+    <li>
+        <span id="userName">{{ user.name }}</span> - Balance: <span id="userBalance">{{ user.balance }}</span>
+        <button onclick="deleteUser('{{ user.name }}')">Delete User</button>
+        <button onclick="settleUp('{{ user.name }}')">Settle Up</button>
+    </li>
+    {% endfor %}
+</ul>
+
+<h2>Expenses</h2>
+<ul>
+    {% for expense in expenses %}
+    <li>
+        Payer: {{ expense.payer }}, Participants: {{ expense.participants }}, Amount: {{ expense.amount }}
+        <button onclick="deleteExpense({{ expense.id }})">Delete Expense</button>
+    </li>
+    {% endfor %}
+</ul>
+
+<form id="addUserForm">
+    <label for="username">Username:</label>
+    <input id="username" name="name" type="text">
+    <button onclick="addUser()" type="button">Add User</button>
+</form>
+
+
+<!--<form id="addExpenseForm">-->
+<!--    <label for="payer">Payer:</label>-->
+<!--    <input id="payer" name="payer" type="text">-->
+<!--    <div id="participantsContainer">-->
+<!--        <label for="participant1">Participant 1:</label>-->
+<!--        <input class="participant" name="participants[]" type="text">-->
+<!--    </div>-->
+<!--    <button onclick="addParticipant()" type="button">Add Participant</button>-->
+<!--    <label for="amount">Amount:</label>-->
+<!--    <input id="amount" name="amount" type="number">-->
+<!--    <button onclick="addExpense()" type="button">Add Expense</button>-->
+<!--    <span id="addExpenseError"></span> &lt;!&ndash; Error message placeholder &ndash;&gt;-->
+<!--</form>-->
+
+
+<!--<h2>Current Balances</h2>-->
+<!--<ul id="balanceList">-->
+<!--    {% for user in users.values() %}-->
+<!--    <li id="balance{{ user.name }}">{{ user.name }}: {{ user.balance }}</li>-->
+<!--    {% endfor %}-->
+<!--</ul>-->
+
+<!--<button onclick="refreshBalances()">Refresh Balances</button>-->
+
+
+<script>
+
+    async function addUser() {
+        const name = document.getElementById("username").value;
+        const response = await fetch("/add_user", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: `name=${name}`
+        });
+        if (response.ok) {
+            // If user added successfully, reload the page
+            window.location.reload();
+        } else {
+            // Handle error if needed
+            console.error("Error adding user");
+        }
+    }
+
+
+    async function deleteUser(name) {
+        const response = await fetch(`/delete_user/${name}`, {
+            method: "POST"
+        });
+        if (response.ok) {
+            // If user deleted successfully, reload the page
+            window.location.reload();
+        } else {
+            // Handle error if needed
+            console.error("Error deleting user");
+        }
+    }
+
+    // async function deleteExpense(id) {
+    //     const response = await fetch(`/delete_expense/${id}`, {
+    //         method: "POST"
+    //     });
+    //     if (response.ok) {
+    //         // If expense deleted successfully, reload the page
+    //         window.location.reload();
+    //     } else {
+    //         // Handle error if needed
+    //         console.error("Error deleting expense");
+    //     }
+    // }
+
+    // async function refreshBalances() {
+    //     window.location.reload();
+    // }
+
+    // async function settleUp(user) {
+    //     const response = await fetch(`/settle_up/${user}`, {method: 'POST'});
+    //     const data = await response.json();
+    //     if (response.ok) {
+    //         // Update the balance for the settled user
+    //         document.getElementById(`balance${user}`).innerText = `${user}: 0`;
+    //         alert(data.message);
+    //     } else {
+    //         alert(data.error);
+    //     }
+    // }
+</script>
+
+</body>
+</html>
