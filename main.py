@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Form, Request
+from fastapi import FastAPI, Form, Request, HTTPException, Query
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -53,10 +53,21 @@ class Expense:
 
 
 @app.post("/add_expense")
-async def add_expense(payer: str = Form(...), participants: List[str] = Form(...), amount: float = Form(...)):
-    global expenses
-    expense = Expense(payer=payer, participants=participants, amount=amount)
+async def add_expense(payer: str = Form(...), participants: List[str] = Query(Form(...)), amount: float = Form(...)):
     print(participants)
+    global expenses
+
+    # Check if payer exists
+    if payer not in users:
+        raise HTTPException(status_code=400, detail="Payer does not exist")
+
+    # Check if any participant does not exist
+    for participant in participants:
+        if participant not in users:
+            raise HTTPException(status_code=400, detail=f"Participant '{participant}' does not exist")
+
+    # If all participants exist, add the expense
+    expense = Expense(payer=payer, participants=participants, amount=amount)
     expenses.append(expense)
     return {"message": "Expense added successfully"}
 

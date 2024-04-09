@@ -71,6 +71,8 @@
         if (response.ok) {
             // If user added successfully, reload the page
             window.location.reload();
+            console.log("Added User:", name)
+
         } else {
             // Handle error if needed
             console.error("Error adding user");
@@ -84,7 +86,8 @@
         });
         if (response.ok) {
             // If user deleted successfully, reload the page
-            window.location.reload();
+            // window.location.reload();
+            console.log("Deleted User:", name)
         } else {
             // Handle error if needed
             console.error("Error deleting user");
@@ -109,7 +112,7 @@
 
         if (response.ok) {
             // If expense added successfully, reload the page
-            window.location.reload();
+            console.log("Added Expense:", formData)
         } else {
             // Handle error if needed
             console.error("Error adding expense");
@@ -124,7 +127,7 @@
 
         if (response.ok) {
             // If expense deleted successfully, reload the page
-            window.location.reload();
+            console.log("Deleted expenseId:", expenseId)
         } else {
             // Handle error if needed
             console.error("Error deleting expense");
