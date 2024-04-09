@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Form, Request, HTTPException, Query
+from typing import List, Literal, Any
+from fastapi import FastAPI, Form, Request, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -30,6 +31,15 @@ async def add_user(name: str = Form(...)):
     return {"message": "User added successfully"}
 
 
+@app.get("/list_user")
+async def list_user():
+    return {"users": users}
+
+
+@app.get("/list_expense")
+async def list_expense():
+    return {"expenses": expenses}
+
 @app.post("/delete_user/{name}")
 async def delete_user(name: str):
     if name in users:
@@ -37,9 +47,6 @@ async def delete_user(name: str):
         return {"message": f"User {name} deleted successfully"}
     else:
         return {"error": "User not found"}
-
-
-from typing import List
 
 
 class Expense:
@@ -53,7 +60,7 @@ class Expense:
 
 
 @app.post("/add_expense")
-async def add_expense(payer: str = Form(...), participants: List[str] = Query(Form(...)), amount: float = Form(...)):
+async def add_expense(payer: str = Form(...), participants: List[str] = Form(...), amount: float = Form(...)):
     print(participants)
     global expenses
 
