@@ -46,10 +46,15 @@
     {% for expense in expenses %}
     <li>
         Payer: {{ expense.payer }}, Participants:
-        {% for participant in expense.participants %}
-        "{{ participant }}"{% if not loop.last %}, {% endif %}
-        {% endfor %}
-        ({{ expense.participants|length }} participants), Amount: {{ expense.amount }}
+        [{% for participant in expense.participants %}
+        {{ participant }}{% if not loop.last %}, {% endif %}
+        {% endfor %} ],
+        ({{ expense.participants|length }} participants),
+        Shares [
+        {% for share in expense.shares %}
+        {{ share }}{% if not loop.last %}, {% endif %}
+        {% endfor %} ]
+        Amount: {{ expense.amount }}
         Description: {{ expense.description }}
         <button onclick="deleteExpense({{ expense.id }})">Delete Expense</button>
     </li>
@@ -61,10 +66,14 @@
     <label for="expensePayer">Payer:</label>
     <input id="expensePayer" name="payer" type="text"><br>
     <label for="expenseParticipants">Participants (comma-separated):</label>
+    <label for="expenseParticipants">i.e. John, David, Mike):</label>
     <input id="expenseParticipants" name="participants" type="text"><br>
     <label for="expenseAmount">Amount:</label>
     <input id="expenseAmount" name="amount" type="number"><br>
-    <label for="expenseDescription">Description:</label>
+    <label for="expenseShares">Shares (optional):</label>
+    <label for="expenseShares">i.e. 1,2,1 (need to match the number and order of participants):</label>
+    <input id="expenseShares" name="shares" type="text"><br>
+    <label for="expenseDescription">Description (Optional):</label>
     <input id="expenseDescription" name="description" type="text"><br>
     <button onclick="addExpense()" type="button">Add Expense</button>
 </form>
@@ -150,13 +159,17 @@
     async function addExpense() {
         const payer = document.getElementById("expensePayer").value;
         const participantsInput = document.getElementById("expenseParticipants").value;
-        const description = document.getElementById("expenseDescription").value;
+        const sharesInput = document.getElementById("expenseShares").value;
+        const descriptionElement = document.getElementById("expenseDescription").value;
+        const description = descriptionElement ? descriptionElement.value : "Default";
         const participants = participantsInput.split(",").map(item => item.trim());
-        console.log("Parsed Participants:", participants); // Log statement
+        const shares = sharesInput.split(",").map(item => item.trim());
+        console.log("Parsed Participants:", participants, shares); // Log statement
 
         const formData = new FormData();
         formData.append("payer", payer);
         participants.forEach(participant => formData.append("participants", participant)); // Append each participant separately
+        shares.forEach(share => formData.append("shares", share)); // Append each share separately
         formData.append("amount", parseFloat(document.getElementById("expenseAmount").value));
         formData.append("description", description);
 
@@ -167,6 +180,7 @@
 
         if (response.ok) {
             // If expense added successfully, reload the page
+            // window.location.reload();
             console.log("Added Expense:", formData)
         } else {
             // Handle error if needed
