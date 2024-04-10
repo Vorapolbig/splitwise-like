@@ -98,12 +98,13 @@ async def delete_user(name: str):
 
 
 class Expense:
-    def __init__(self, payer: str, participants: List[str], amount: float):
+    def __init__(self, payer: str, participants: List[str], amount: float, description: str = "Default"):
         global expense_id_counter
         self.id = expense_id_counter
         expense_id_counter += 1
         self.payer = payer
         self.participants = participants
+        self.description = description
         self.amount = amount
 
 
@@ -117,7 +118,10 @@ class Payment:
         self.amount = amount
 
 @app.post("/add_expense")
-async def add_expense(payer: str = Form(...), participants: List[str] = Form(...), amount: float = Form(...)):
+async def add_expense(payer: str = Form(...),
+                      participants: List[str] = Form(...),
+                      amount: float = Form(...),
+                      description: str = Form(...)):
     print(participants)
     global expenses
 
@@ -131,7 +135,7 @@ async def add_expense(payer: str = Form(...), participants: List[str] = Form(...
             raise HTTPException(status_code=400, detail=f"Participant '{participant}' does not exist")
 
     # If all participants exist, add the expense
-    expense = Expense(payer=payer, participants=participants, amount=amount)
+    expense = Expense(payer=payer, participants=participants, amount=amount, description=description)
     expenses.append(expense)
     return {"message": "Expense added successfully"}
 

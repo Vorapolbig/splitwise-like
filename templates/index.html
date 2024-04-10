@@ -50,6 +50,7 @@
         "{{ participant }}"{% if not loop.last %}, {% endif %}
         {% endfor %}
         ({{ expense.participants|length }} participants), Amount: {{ expense.amount }}
+        Description: {{ expense.description }}
         <button onclick="deleteExpense({{ expense.id }})">Delete Expense</button>
     </li>
     {% endfor %}
@@ -63,6 +64,8 @@
     <input id="expenseParticipants" name="participants" type="text"><br>
     <label for="expenseAmount">Amount:</label>
     <input id="expenseAmount" name="amount" type="number"><br>
+    <label for="expenseDescription">Description:</label>
+    <input id="expenseDescription" name="description" type="text"><br>
     <button onclick="addExpense()" type="button">Add Expense</button>
 </form>
 
@@ -147,6 +150,7 @@
     async function addExpense() {
         const payer = document.getElementById("expensePayer").value;
         const participantsInput = document.getElementById("expenseParticipants").value;
+        const description = document.getElementById("expenseDescription").value;
         const participants = participantsInput.split(",").map(item => item.trim());
         console.log("Parsed Participants:", participants); // Log statement
 
@@ -154,6 +158,7 @@
         formData.append("payer", payer);
         participants.forEach(participant => formData.append("participants", participant)); // Append each participant separately
         formData.append("amount", parseFloat(document.getElementById("expenseAmount").value));
+        formData.append("description", description);
 
         const response = await fetch("/add_expense", {
             method: "POST",
