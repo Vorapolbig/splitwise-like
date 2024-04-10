@@ -1,4 +1,5 @@
-from typing import List, Literal, Any
+from typing import List
+
 from fastapi import FastAPI, Form, Request, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -15,12 +16,60 @@ templates = Jinja2Templates(directory="templates")
 # Splitwise data
 users = {}
 expenses = []
+payments = []
 expense_id_counter = 0
+payment_id_counter = 0
+
+
+def calculate_payments(expenses):
+    global payments
+    # Dictionary to store the amount owed by each participant
+    amount_owed = {}
+    # Dictionary to store the amount paid by each participant
+    amount_paid = {}
+
+    # Calculate total amount owed and total amount paid by each participant
+    for expense in expenses:
+        payer = expense.payer
+        participants = expense.participants
+        amount = expense.amount
+
+        # Increment amount paid by the payer
+        amount_paid[payer] = amount_paid.get(payer, 0) + amount
+
+        # Split the amount equally among participants
+        split_amount = amount / len(participants)
+        for participant in participants:
+            # Increment amount owed by each participant
+            amount_owed[participant] = amount_owed.get(participant, 0) + split_amount
+
+    # Calculate the difference between amount owed and amount paid
+    differences = {}
+    for participant, owed_amount in amount_owed.items():
+        paid_amount = amount_paid.get(participant, 0)
+        differences[participant] = owed_amount - paid_amount
+
+    # Determine who owes money to whom
+    payments = []
+    for participant, difference in differences.items():
+        if difference > 0:  # Participant owes money
+            for debtor, debt in differences.items():
+                if debt < 0:  # Debtor is owed money
+                    amount = min(difference, -debt)  # Payment is the minimum of what is owed and what is owed
+                    payment = Payment(participant, debtor, amount)
+                    payments.append(payment)
+                    difference -= amount
+                    differences[debtor] += amount
+                    if difference == 0:
+                        break
+    print(payments)
+    return payments
 
 # Define routes
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request, "users": users, "expenses": expenses})
+    return templates.TemplateResponse("index.html",
+                                      {"request": request, "users": users, "expenses": expenses, "payments": payments})
 
 
 @app.post("/add_user")
@@ -57,6 +106,15 @@ class Expense:
         self.participants = participants
         self.amount = amount
 
+
+class Payment:
+    def __init__(self, payer: str, payee: str, amount: float):
+        global payment_id_counter
+        self.id = payment_id_counter
+        payment_id_counter += 1
+        self.payer = payer
+        self.payee = payee
+        self.amount = amount
 
 @app.post("/add_expense")
 async def add_expense(payer: str = Form(...), participants: List[str] = Form(...), amount: float = Form(...)):
@@ -101,6 +159,13 @@ async def update_balance(request: Request):
     return {"message": "Balance updated successfully"}
 
 
+@app.get("/calculate_payments/")
+async def get_payments():
+    global payments
+    global payment_id_counter
+    payment_id_counter = 0
+    payments = calculate_payments(expenses)
+    return {"payments": payments}
 
 if __name__ == "__main__":
     import uvicorn
