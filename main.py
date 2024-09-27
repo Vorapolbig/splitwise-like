@@ -33,15 +33,16 @@ def calculate_payments(expenses):
         payer = expense.payer
         participants = expense.participants
         amount = expense.amount
+        shares = expense.shares
 
         # Increment amount paid by the payer
         amount_paid[payer] = amount_paid.get(payer, 0) + amount
 
-        # Split the amount equally among participants
-        split_amount = amount / len(participants)
-        for participant in participants:
+        # Split the amount based on shares
+        total_shares = sum(shares)
+        for i, participant in enumerate(participants):
             # Increment amount owed by each participant
-            amount_owed[participant] = amount_owed.get(participant, 0) + split_amount
+            amount_owed[participant] = amount_owed.get(participant, 0) + amount * shares[i] / total_shares
 
     # Calculate the difference between amount owed and amount paid
     differences = {}
@@ -98,13 +99,24 @@ async def delete_user(name: str):
 
 
 class Expense:
-    def __init__(self, payer: str, participants: List[str], amount: float):
+    def __init__(self, payer: str,
+                 participants: List[str],
+                 amount: float,
+                 shares: List[str],
+                 description: str = "Default"):
+        if len(shares) == 1 and shares[0] == '':
+            shares = [1]* len(participants)
+        else:
+            print(shares)
+            shares = [int(share) for share in shares]
         global expense_id_counter
         self.id = expense_id_counter
         expense_id_counter += 1
         self.payer = payer
         self.participants = participants
+        self.description = description
         self.amount = amount
+        self.shares = shares
 
 
 class Payment:
@@ -117,7 +129,11 @@ class Payment:
         self.amount = amount
 
 @app.post("/add_expense")
-async def add_expense(payer: str = Form(...), participants: List[str] = Form(...), amount: float = Form(...)):
+async def add_expense(payer: str = Form(...),
+                      participants: List[str] = Form(...),
+                      amount: float = Form(...),
+                      shares: List[str] = Form(...),
+                      description: str = Form(...)):
     print(participants)
     global expenses
 
@@ -131,7 +147,11 @@ async def add_expense(payer: str = Form(...), participants: List[str] = Form(...
             raise HTTPException(status_code=400, detail=f"Participant '{participant}' does not exist")
 
     # If all participants exist, add the expense
-    expense = Expense(payer=payer, participants=participants, amount=amount)
+    expense = Expense(payer=payer,
+                      participants=participants,
+                      amount=amount,
+                      shares=shares,
+                      description=description)
     expenses.append(expense)
     return {"message": "Expense added successfully"}
 
@@ -152,10 +172,10 @@ async def update_balance(request: Request):
         users[name]["paid"] = 0
         users[name]["owed"] = 0
 
-    for expense in expenses:
+    for i, expense in enumerate(expenses):
         users[expense.payer]["paid"] += expense.amount
         for participant in expense.participants:
-            users[participant]["owed"] += expense.amount / len(expense.participants)
+            users[participant]["owed"] += expense.amount / sum(expense.shares) * expense.shares[i]
     return {"message": "Balance updated successfully"}
 
 
